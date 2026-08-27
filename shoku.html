@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="sq">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+<title>SHOKU</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#14171f;
+    --bg-soft:#1b1f2a;
+    --sheet:#1e2330;
+    --bubble-user:#262c3d;
+    --bubble-shoku:#2c2419;
+    --accent:#e8a94c;
+    --accent-dim:#8a6a35;
+    --text:#f3efe6;
+    --text-muted:#9b95a6;
+    --danger:#c9694f;
+    --ok:#7ec98f;
+    --soon:#8a8574;
+    --border:rgba(255,255,255,0.07);
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Inter',system-ui,-apple-system,sans-serif;
+    display:flex;
+    justify-content:center;
+    overflow:hidden;
+  }
+  #app{
+    width:100%;
+    max-width:480px;
+    height:100dvh;
+    display:flex;
+    flex-direction:column;
+    background:var(--bg);
+    position:relative;
+  }
+
+  /* HEADER */
+  header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:14px 14px 12px 18px;
+    border-bottom:1px solid var(--border);
+    background:linear-gradient(180deg, var(--bg-soft), var(--bg));
+    flex-shrink:0;
+  }
+  .brand{display:flex; align-items:center; gap:10px; min-width:0;}
+  .lamp{
+    width:32px; height:32px; border-radius:50%;
+    background:radial-gradient(circle at 35% 30%, var(--accent), var(--accent-dim) 70%);
+    box-shadow:0 0 14px 2px rgba(232,169,76,0.35);
+    animation:breathe 3.6s ease-in-out infinite;
+    flex-shrink:0;
+  }
+  .lamp.thinking{animation:breathe 1.1s ease-in-out infinite;}
+  .lamp.speaking{animation:breathe 0.6s ease-in-out infinite;}
+  @keyframes breathe{
+    0%,100%{transform:scale(1); box-shadow:0 0 14px 2px rgba(232,169,76,0.35);}
+    50%{transform:scale(1.12); box-shadow:0 0 20px 6px rgba(232,169,76,0.55);}
+  }
+  .brand-name{font-family:'Fraunces',serif; font-size:21px; font-weight:700; letter-spacing:0.5px;}
+  .brand-sub{font-size:10.5px; color:var(--text-muted); margin-top:-2px;}
+  .hdr-icons{display:flex; gap:6px; flex-shrink:0;}
+  .icon-btn{
+    background:none; border:1px solid var(--border); color:var(--text-muted);
+    width:36px; height:36px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    font-size:15px; cursor:pointer; position:relative;
+  }
+  .icon-btn.active{color:var(--accent); border-color:var(--accent-dim);}
+  .badge-dot{
+    position:absolute; top:-2px; right:-2px; width:9px; height:9px; border-radius:50%;
+    background:var(--accent); border:1.5px solid var(--bg-soft);
+  }
+
+  /* CHAT */
+  #chat{
+    flex:1; overflow-y:auto; padding:16px 16px 8px;
+    display:flex; flex-direction:column; gap:12px;
+  }
+  .bubble{
+    max-width:82%; padding:11px 14px; border-radius:16px;
+    font-size:15.5px; line-height:1.45; white-space:pre-wrap; word-wrap:break-word;
+    animation:pop 0.18s ease-out;
+  }
+  @keyframes pop{from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:translateY(0);}}
+  .bubble.user{align-self:flex-end; background:var(--bubble-user); border-bottom-right-radius:5px;}
+  .bubble.shoku{align-self:flex-start; background:var(--bubble-shoku); border-bottom-left-radius:5px; border:1px solid rgba(232,169,76,0.12);}
+  .typing-dots{display:flex; gap:4px; padding:4px 2px;}
+  .typing-dots span{width:6px; height:6px; border-radius:50%; background:var(--accent); animation:blink 1.2s infinite ease-in-out;}
+  .typing-dots span:nth-child(2){animation-delay:0.2s;}
+  .typing-dots span:nth-child(3){animation-delay:0.4s;}
+  @keyframes blink{0%,80%,100%{opacity:0.25;} 40%{opacity:1;}}
+
+  .chips{display:flex; flex-wrap:wrap; gap:8px; padding:2px 2px 10px;}
+  .chip{
+    background:var(--sheet); border:1px solid var(--border); color:var(--text);
+    padding:9px 13px; border-radius:16px; font-size:13px; cursor:pointer;
+  }
+  .chip:active{border-color:var(--accent-dim);}
+
+  /* INPUT BAR */
+  #inputbar{
+    display:flex; align-items:flex-end; gap:8px;
+    padding:10px 12px calc(10px + env(safe-area-inset-bottom));
+    border-top:1px solid var(--border); background:var(--bg-soft); flex-shrink:0;
+  }
+  #mic{
+    width:44px; height:44px; border-radius:50%; border:1px solid var(--border);
+    background:var(--sheet); color:var(--text-muted); font-size:18px;
+    display:flex; align-items:center; justify-content:center; flex-shrink:0; cursor:pointer;
+  }
+  #mic.recording{background:var(--danger); color:#fff; border-color:var(--danger); animation:pulse 1s infinite;}
+  @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(201,105,79,0.5);} 50%{box-shadow:0 0 0 8px rgba(201,105,79,0);}}
+  #textwrap{
+    flex:1; display:flex; align-items:flex-end; background:var(--sheet);
+    border:1px solid var(--border); border-radius:20px; padding:6px 6px 6px 16px;
+  }
+  #textinput{
+    flex:1; background:none; border:none; outline:none; color:var(--text);
+    font-family:'Inter',sans-serif; font-size:15.5px; resize:none;
+    max-height:110px; padding:8px 0; line-height:1.35;
+  }
+  #textinput::placeholder{color:var(--text-muted);}
+  #send{
+    width:36px; height:36px; border-radius:50%; border:none;
+    background:var(--accent); color:#20160a; font-size:16px; font-weight:700;
+    display:flex; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0;
+  }
+  #send:disabled{opacity:0.35;}
+
+  /* OVERLAY + SHEETS (shared) */
+  #overlay{
+    position:absolute; inset:0; background:rgba(0,0,0,0.5);
+    opacity:0; pointer-events:none; transition:opacity 0.2s; z-index:5;
+  }
+  #overlay.show{opacity:1; pointer-events:auto;}
+  .sheet{
+    position:absolute; left:0; right:0; bottom:0; z-index:6;
+    background:var(--sheet); border-radius:20px 20px 0 0;
+    border-top:1px solid var(--border);
+    padding:18px 18px calc(18px + env(safe-area-inset-bottom));
+    max-height:78%; display:flex; flex-direction:column;
+    transform:translateY(100%); transition:transform 0.25s ease-out;
+  }
+  .sheet.show{transform:translateY(0);}
+  .sheet-handle{width:38px; height:4px; background:var(--border); border-radius:3px; margin:0 auto 14px;}
+  .sheet-title{font-family:'Fraunces',serif; font-size:19px; font-weight:600; margin-bottom:2px;}
+  .sheet-sub{font-size:12.5px; color:var(--text-muted); margin-bottom:14px;}
+  .close-sheet{position:absolute; top:16px; right:18px; background:none; border:none; color:var(--text-muted); font-size:20px; cursor:pointer;}
+
+  /* MEMORY */
+  .toggle-row{display:flex; align-items:center; justify-content:space-between; padding:12px 0; border-bottom:1px solid var(--border);}
+  .switch{width:44px; height:26px; border-radius:14px; background:var(--border); position:relative; cursor:pointer; flex-shrink:0; transition:background 0.2s;}
+  .switch.on{background:var(--accent-dim);}
+  .switch::after{content:''; position:absolute; top:3px; left:3px; width:20px; height:20px; border-radius:50%; background:var(--text); transition:transform 0.2s;}
+  .switch.on::after{transform:translateX(18px); background:var(--accent);}
+  #memlist,#toolslist,#todolist{overflow-y:auto; margin-top:8px; display:flex; flex-direction:column; gap:8px;}
+  .mem-item{display:flex; justify-content:space-between; align-items:center; gap:10px; background:var(--bg-soft); border:1px solid var(--border); border-radius:12px; padding:10px 12px; font-size:13.5px; line-height:1.4;}
+  .mem-item .txt{flex:1;}
+  .mem-item button{background:none; border:none; color:var(--danger); font-size:12px; cursor:pointer; flex-shrink:0; padding:4px 6px;}
+  .mem-empty{color:var(--text-muted); font-size:13px; text-align:center; padding:20px 0;}
+  .clear-all{margin-top:14px; background:none; border:1px solid var(--danger); color:var(--danger); border-radius:12px; padding:10px; font-size:13.5px; cursor:pointer;}
+
+  /* TOOLS */
+  .tool-row{display:flex; align-items:center; justify-content:space-between; gap:10px; background:var(--bg-soft); border:1px solid var(--border); border-radius:12px; padding:12px 13px;}
+  .tool-name{font-size:14px; font-weight:600;}
+  .tool-desc{font-size:12px; color:var(--text-muted); margin-top:2px;}
+  .status{font-size:11px; padding:4px 9px; border-radius:10px; font-weight:600; white-space:nowrap; flex-shrink:0;}
+  .status.ok{color:var(--ok); background:rgba(126,201,143,0.12);}
+  .status.soon{color:var(--soon); background:rgba(138,133,116,0.15);}
+
+  /* TODOS */
+  #todoAddRow{display:flex; gap:8px; margin-top:6px;}
+  #todoInput{flex:1; background:var(--bg-soft); border:1px solid var(--border); border-radius:12px; padding:10px 12px; color:var(--text); font-size:14px; outline:none;}
+  #todoAdd{background:var(--accent); border:none; color:#20160a; border-radius:12px; padding:0 16px; font-weight:700; cursor:pointer;}
+  .todo-item{display:flex; align-items:center; gap:10px; background:var(--bg-soft); border:1px solid var(--border); border-radius:12px; padding:10px 12px;}
+  .todo-check{width:20px; height:20px; border-radius:6px; border:1.5px solid var(--accent-dim); flex-shrink:0; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:12px;}
+  .todo-check.done{background:var(--accent); border-color:var(--accent); color:#20160a;}
+  .todo-text{flex:1; font-size:14px;}
+  .todo-text.done{text-decoration:line-through; color:var(--text-muted);}
+  .todo-item button{background:none; border:none; color:var(--danger); font-size:12px; cursor:pointer;}
+
+  #toast{
+    position:absolute; bottom:90px; left:50%; transform:translateX(-50%) translateY(20px);
+    background:#2a2f3d; color:var(--text); padding:9px 16px; border-radius:20px;
+    font-size:13px; opacity:0; transition:all 0.25s; pointer-events:none; white-space:nowrap;
+    border:1px solid var(--border); z-index:20; max-width:88%; overflow:hidden; text-overflow:ellipsis;
+  }
+  #toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <header>
+    <div class="brand">
+      <div class="lamp" id="lamp"></div>
+      <div>
+        <div class="brand-name">SHOKU</div>
+        <div class="brand-sub">gjithmonë këtu për ty</div>
+      </div>
+    </div>
+    <div class="hdr-icons">
+      <button class="icon-btn" id="todoBtn" title="Detyrat">✅</button>
+      <button class="icon-btn" id="memBtn" title="Kujtesa">🧠</button>
+      <button class="icon-btn" id="toolsBtn" title="Mjetet">🧰</button>
+    </div>
+  </header>
+
+  <div id="chat"></div>
+
+  <div id="inputbar">
+    <button id="mic" title="Fol">🎤</button>
+    <div id="textwrap">
+      <textarea id="textinput" placeholder="Shkruaj çka ke në mendje..." rows="1"></textarea>
+    </div>
+    <button id="send">➤</button>
+  </div>
+
+  <div id="overlay"></div>
+
+  <!-- MEMORY SHEET -->
+  <div class="sheet" id="memsheet">
+    <button class="close-sheet" data-close>✕</button>
+    <div class="sheet-handle"></div>
+    <div class="sheet-title">Kujtesa e SHOKUT</div>
+    <div class="sheet-sub">Çka mban mend SHOKU për ty. Ti ke kontroll të plotë.</div>
+    <div class="toggle-row">
+      <div>
+        <div style="font-size:14px; font-weight:600;">Kujtesa e ndezur</div>
+        <div style="font-size:12px; color:var(--text-muted);">Kur e fike, SHOKU harron çdo gjë të re</div>
+      </div>
+      <div class="switch on" id="memSwitch"></div>
+    </div>
+    <div id="memlist"></div>
+    <button class="clear-all" id="clearAll">Fshi gjithë kujtesën</button>
+  </div>
+
+  <!-- TOOLS SHEET -->
+  <div class="sheet" id="toolssheet">
+    <button class="close-sheet" data-close>✕</button>
+    <div class="sheet-handle"></div>
+    <div class="sheet-title">Mjetet e SHOKUT</div>
+    <div class="sheet-sub">Çka punon tashmë dhe çka po vjen — gjithçka prapa një bisede të vetme.</div>
+    <div class="toggle-row">
+      <div>
+        <div style="font-size:14px; font-weight:600;">SHOKU flet me zë</div>
+        <div style="font-size:12px; color:var(--text-muted);">Lexon me zë përgjigjet e reja</div>
+      </div>
+      <div class="switch" id="voiceOutSwitch"></div>
+    </div>
+    <div id="toolslist"></div>
+  </div>
+
+  <!-- TODO SHEET -->
+  <div class="sheet" id="todosheet">
+    <button class="close-sheet" data-close>✕</button>
+    <div class="sheet-handle"></div>
+    <div class="sheet-title">Detyrat e sotme</div>
+    <div class="sheet-sub">Organizimi yt i ditës, direkt këtu.</div>
+    <div id="todoAddRow">
+      <input id="todoInput" placeholder="Shto një detyrë..." />
+      <button id="todoAdd">Shto</button>
+    </div>
+    <div id="todolist"></div>
+  </div>
+
+</div>
+
+<div id="toast"></div>
+
+<script>
+(function(){
+  const chatEl = document.getElementById('chat');
+  const input = document.getElementById('textinput');
+  const sendBtn = document.getElementById('send');
+  const micBtn = document.getElementById('mic');
+  const lamp = document.getElementById('lamp');
+  const overlay = document.getElementById('overlay');
+  const toastEl = document.getElementById('toast');
+
+  const memBtn = document.getElementById('memBtn');
+  const memsheet = document.getElementById('memsheet');
+  const memSwitch = document.getElementById('memSwitch');
+  const memlist = document.getElementById('memlist');
+  const clearAll = document.getElementById('clearAll');
+
+  const toolsBtn = document.getElementById('toolsBtn');
+  const toolssheet = document.getElementById('toolssheet');
+  const toolslist = document.getElementById('toolslist');
+  const voiceOutSwitch = document.getElementById('voiceOutSwitch');
+
+  const todoBtn = document.getElementById('todoBtn');
+  const todosheet = document.getElementById('todosheet');
+  const todolist = document.getElementById('todolist');
+  const todoInput = document.getElementById('todoInput');
+  const todoAdd = document.getElementById('todoAdd');
+
+  let messages = [];
+  let memory = [];
+  let memoryEnabled = true;
+  let voiceOutEnabled = false;
+  let todos = [];
+
+  function toast(msg){
+    toastEl.textContent = msg;
+    toastEl.classList.add('show');
+    clearTimeout(toastEl._t);
+    toastEl._t = setTimeout(()=>toastEl.classList.remove('show'), 2400);
+  }
+
+  async function safeGet(key){
+    try{ const r = await window.storage.get(key, false); return r ? r.value : null; }
+    catch(e){ return null; }
+  }
+  async function safeSet(key, value){
+    try{ await window.storage.set(key, value, false); }
+    catch(e){ /* memory best-effort */ }
+  }
+
+  /* ---------- SHEETS ---------- */
+  function openSheet(el){ overlay.classList.add('show'); el.classList.add('show'); }
+  function closeSheets(){
+    overlay.classList.remove('show');
+    [memsheet, toolssheet, todosheet].forEach(s=>s.classList.remove('show'));
+  }
+  overlay.addEventListener('click', closeSheets);
+  document.querySelectorAll('[data-close]').forEach(b=>b.addEventListener('click', closeSheets));
+
+  /* ---------- CHAT ---------- */
+  function addBubble(role, text, animate){
+    const div = document.createElement('div');
+    div.className = 'bubble ' + role;
+    div.textContent = text;
+    chatEl.appendChild(div);
+    if(animate !== false) scrollBottom();
+    return div;
+  }
+  function scrollBottom(){ requestAnimationFrame(()=>{ chatEl.scrollTop = chatEl.scrollHeight; }); }
+
+  const SUGGESTIONS = [
+    'Dua me i shkru një shoku po s\'di qysh',
+    'Kam një ide për një film',
+    'Dua një këngë me zërin tim',
+    'S\'po e kuptoj këtë mësim',
+    'Çka duhet të bëj sot?'
+  ];
+  function renderChips(){
+    const existing = document.getElementById('chipsRow');
+    if(existing) existing.remove();
+    if(messages.length > 0) return;
+    const row = document.createElement('div');
+    row.className = 'chips';
+    row.id = 'chipsRow';
+    SUGGESTIONS.forEach(s=>{
+      const chip = document.createElement('button');
+      chip.className = 'chip';
+      chip.textContent = s;
+      chip.onclick = ()=>{ input.value = s; autoGrow(); handleSend(); };
+      row.appendChild(chip);
+    });
+    chatEl.appendChild(row);
+    scrollBottom();
+  }
+
+  function autoGrow(){
+    input.style.height = 'auto';
+    input.style.height = Math.min(input.scrollHeight, 110) + 'px';
+  }
+  input.addEventListener('input', autoGrow);
+  input.addEventListener('keydown', (e)=>{
+    if(e.key === 'Enter' && !e.shiftKey){ e.preventDefault(); handleSend(); }
+  });
+  sendBtn.addEventListener('click', handleSend);
+
+  function buildSystemPrompt(){
+    let mem = '';
+    if(memoryEnabled && memory.length){
+      mem = '\n\nÇka di për shokun tënd nga bisedat e mëparshme (përdore vetëm kur është me vend, mos e përmend vetë kujtesën si mekanizëm):\n- ' + memory.join('\n- ');
+    }
+    return `Ti je SHOKU, një shok/mikeshë personale me AI, e krijume posaçërisht për shqipfolës. Nuk je asistent formal apo "bot" - je si një shok i afërt që flet shqip natyrshëm, përfshi format joformale/dialektore si "qka", "qysh", "jom", "skom", "ni", "ma bo", "po", "veç", etj, sipas mënyrës si të shkruan personi.
+
+Rregullat e tua:
+- Përgjigju gjithmonë në shqip, në mënyrë të ngrohtë, njerëzore dhe të drejtpërdrejtë - jo formale e ftohtë, por edhe jo e ekzagjeruar.
+- Personi nuk di dhe s'ka nevojë të dijë "prompt-e" apo terma teknike. Kupto qëllimin prej asaj çka thotë, edhe nëse është e shkurtër ose e paqartë, dhe kthe në diçka të përdorshme direkt (tekst, ide, shpjegim, plan, etj).
+- Nëse dikush thotë p.sh. "dua me i shkru një shoku po s'di qysh" - mos pyet 10 pyetje, fillo drejt e krijo diçka të mirë dhe pastaj pyet nëse duhet ndryshim.
+- Nëse ideja është e paqartë, bëj një supozim të arsyeshëm dhe vazhdo, në vend që të ndalesh me pyetje.
+- Ji konciz kur mundesh - flet si shok në chat, jo si ese. Përgjigjet e gjata i ndan në paragrafë të shkurtër, të lehta për t'u lexuar në telefon.
+- Kur dikush sjell një ide, projekt, film, këngë, mësim - ndihmoje ta zhvillojë hap pas hapi.
+- Nëse dikush kërkon organizim dite/detyra, mund t'i sugjerosh të hapë ikonën ✅ "Detyrat" për t'i shënuar, por gjithsesi ndihmo edhe direkt në bisedë me plan konkret.
+- Nuk ke ende akses real në internet, muzikë AI, ose video AI - nëse kërkohet, thuaj sinqerisht se ajo pjesë po vjen së shpejti dhe ndihmo me atë çka mundesh tani (p.sh. tekst kënge, ide videoje, skenar, përmbledhje nga dijet e tua).${mem}
+
+MEKANIZMI I KUJTESËS (i fshehtë, mos e shpjego kurrë te përdoruesi):
+Nëse në këtë bisedë del diçka e qëndrueshme që ia vlen të mbahet mend për të ardhmen (p.sh. emri i një projekti, një film/këngë pa titull që po zhvillohet, një preferencë e qartë, një detaj personal i rëndësishëm), shto në FUND të përgjigjes tënde, në një rresht të ri, saktësisht në këtë format:
+[MEMO: përshkrim i shkurtër dhe konkret në shqip]
+Përdore MEMO shumë rrallë - vetëm për gjëra vërtet të qëndrueshme, jo për çdo mesazh. Mos e përdor fare nëse s'ka asgjë të re për t'u mbajtur mend. Ky rresht hiqet automatikisht para se përdoruesi ta shohë përgjigjen, prandaj shkruaje vetëm kur është vërtet e nevojshme.`;
+  }
+
+  async function callShoku(){
+    const sysPrompt = buildSystemPrompt();
+    const apiMessages = messages.map(m => ({role: m.role, content: m.content}));
+    const response = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-6",
+        max_tokens: 1000,
+        system: sysPrompt,
+        messages: apiMessages
+      })
+    });
+    const data = await response.json();
+    let text = (data.content || []).map(b => b.text || '').join('\n').trim();
+
+    const memoMatch = text.match(/\[MEMO:\s*([^\]]+)\]\s*$/i);
+    if(memoMatch){
+      text = text.replace(/\[MEMO:\s*([^\]]+)\]\s*$/i, '').trim();
+      if(memoryEnabled){
+        const note = memoMatch[1].trim();
+        if(note && !memory.includes(note)){
+          memory.push(note);
+          await safeSet('shoku:memory', JSON.stringify(memory));
+        }
+      }
+    }
+    return text || 'Më fal, s\'munda me formu përgjigje tani. Provo edhe njëherë.';
+  }
+
+  function speak(text){
+    if(!voiceOutEnabled) return;
+    try{
+      if(!('speechSynthesis' in window)) return;
+      window.speechSynthesis.cancel();
+      const utter = new SpeechSynthesisUtterance(text);
+      const voices = window.speechSynthesis.getVoices();
+      const sqVoice = voices.find(v => v.lang && v.lang.toLowerCase().startsWith('sq'));
+      if(sqVoice) utter.voice = sqVoice;
+      utter.lang = sqVoice ? sqVoice.lang : 'sq-AL';
+      utter.rate = 1.0;
+      utter.onstart = ()=> lamp.classList.add('speaking');
+      utter.onend = ()=> lamp.classList.remove('speaking');
+      utter.onerror = ()=> lamp.classList.remove('speaking');
+      window.speechSynthesis.speak(utter);
+    }catch(e){}
+  }
+
+  async function handleSend(){
+    const text = input.value.trim();
+    if(!text) return;
+    input.value = '';
+    autoGrow();
+    sendBtn.disabled = true;
+
+    const chips = document.getElementById('chipsRow');
+    if(chips) chips.remove();
+
+    addBubble('user', text);
+    messages.push({role:'user', content:text});
+    await safeSet('shoku:messages', JSON.stringify(messages));
+
+    const thinkingBubble = addBubble('shoku', '');
+    const dots = document.createElement('div');
+    dots.className = 'typing-dots';
+    dots.innerHTML = '<span></span><span></span><span></span>';
+    thinkingBubble.appendChild(dots);
+    lamp.classList.add('thinking');
+    scrollBottom();
+
+    try{
+      const reply = await callShoku();
+      thinkingBubble.textContent = reply;
+      messages.push({role:'assistant', content:reply});
+      await safeSet('shoku:messages', JSON.stringify(messages));
+      speak(reply);
+    }catch(e){
+      thinkingBubble.textContent = 'Diqka shkoi keq me lidhjen. Provo edhe njëherë pak më vonë.';
+    }finally{
+      lamp.classList.remove('thinking');
+      sendBtn.disabled = false;
+      scrollBottom();
+    }
+  }
+
+  /* ---------- VOICE INPUT ---------- */
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  let recognition = null;
+  let recording = false;
+  if(SR){
+    recognition = new SR();
+    recognition.lang = 'sq-AL';
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+    recognition.onresult = (e)=>{
+      const said = e.results[0][0].transcript;
+      input.value = (input.value ? input.value + ' ' : '') + said;
+      autoGrow();
+      input.focus();
+    };
+    recognition.onerror = ()=>{ toast('S\'kuptova mirë, provo edhe njëherë.'); };
+    recognition.onend = ()=>{ recording = false; micBtn.classList.remove('recording'); };
+  }
+  micBtn.addEventListener('click', ()=>{
+    if(!SR){ toast('Zëri s\'mbështetet në këtë shfletues — provo Chrome.'); return; }
+    if(recording){ recognition.stop(); recording = false; micBtn.classList.remove('recording'); return; }
+    try{
+      recognition.start();
+      recording = true;
+      micBtn.classList.add('recording');
+      toast('Të dëgjoj...');
+    }catch(e){ toast('S\'munda me nis mikrofonin.'); }
+  });
+
+  /* ---------- MEMORY SHEET ---------- */
+  function renderMemSwitch(){ memSwitch.classList.toggle('on', memoryEnabled); }
+  function renderMemList(){
+    memlist.innerHTML = '';
+    if(!memory.length){
+      const p = document.createElement('div');
+      p.className = 'mem-empty';
+      p.textContent = 'SHOKU s\'ka ende asnjë kujtim. Kur flisni për diçka të qëndrueshme, do të shfaqet këtu.';
+      memlist.appendChild(p);
+      return;
+    }
+    memory.forEach((note, idx)=>{
+      const row = document.createElement('div');
+      row.className = 'mem-item';
+      const span = document.createElement('div');
+      span.className = 'txt';
+      span.textContent = note;
+      const btn = document.createElement('button');
+      btn.textContent = 'Fshij';
+      btn.onclick = async ()=>{
+        memory.splice(idx,1);
+        await safeSet('shoku:memory', JSON.stringify(memory));
+        renderMemList();
+        toast('U fshi kujtimi');
+      };
+      row.appendChild(span);
+      row.appendChild(btn);
+      memlist.appendChild(row);
+    });
+  }
+  memBtn.addEventListener('click', ()=>{ renderMemList(); openSheet(memsheet); });
+  memSwitch.addEventListener('click', async ()=>{
+    memoryEnabled = !memoryEnabled;
+    renderMemSwitch();
+    await safeSet('shoku:memory_enabled', memoryEnabled ? 'true' : 'false');
+    toast(memoryEnabled ? 'Kujtesa është ndezur' : 'Kujtesa është fikur');
+  });
+  clearAll.addEventListener('click', async ()=>{
+    memory = [];
+    await safeSet('shoku:memory', JSON.stringify(memory));
+    renderMemList();
+    toast('U fshi gjithë kujtesa');
+  });
+
+  /* ---------- TOOLS SHEET ---------- */
+  const TOOLS = [
+    {name:'Bisedë & Arsyetim AI', desc:'Kupton çka thua dhe përgjigjet natyrshëm', status:'ok'},
+    {name:'Kujtesë personale', desc:'Ruan dhe harron sipas dëshirës tënde', status:'ok'},
+    {name:'Zë → Tekst', desc:'Flet, SHOKU e kthen në shkrim', status:'ok'},
+    {name:'Tekst → Zë', desc:'SHOKU mund të lexojë përgjigjet me zë', status:'ok'},
+    {name:'Organizimi i ditës', desc:'Lista e detyrave, gjithmonë e ruajtur', status:'ok'},
+    {name:'Mësim & shpjegime', desc:'Shpjegon çdo temë thjeshtë, hap pas hapi', status:'ok'},
+    {name:'Kërkim në internet', desc:'Përgjigje me informacione aktuale nga web-i', status:'soon'},
+    {name:'Muzikë me AI', desc:'Krijon këngë me zërin ose stilin tënd', status:'soon'},
+    {name:'Video me AI', desc:'Kthen idenë tënde në video', status:'soon'},
+  ];
+  function renderTools(){
+    toolslist.innerHTML = '';
+    TOOLS.forEach(t=>{
+      const row = document.createElement('div');
+      row.className = 'tool-row';
+      row.innerHTML = `<div><div class="tool-name">${t.name}</div><div class="tool-desc">${t.desc}</div></div>
+        <div class="status ${t.status}">${t.status === 'ok' ? 'Aktiv' : 'Së shpejti'}</div>`;
+      toolslist.appendChild(row);
+    });
+  }
+  toolsBtn.addEventListener('click', ()=>{ renderTools(); openSheet(toolssheet); });
+  voiceOutSwitch.addEventListener('click', async ()=>{
+    voiceOutEnabled = !voiceOutEnabled;
+    voiceOutSwitch.classList.toggle('on', voiceOutEnabled);
+    await safeSet('shoku:voice_out', voiceOutEnabled ? 'true' : 'false');
+    toast(voiceOutEnabled ? 'SHOKU do të flasë me zë' : 'Zëri i SHOKUT është fikur');
+    if(!voiceOutEnabled && 'speechSynthesis' in window) window.speechSynthesis.cancel();
+  });
+
+  /* ---------- TODO SHEET ---------- */
+  function renderTodos(){
+    todolist.innerHTML = '';
+    if(!todos.length){
+      const p = document.createElement('div');
+      p.className = 'mem-empty';
+      p.textContent = 'S\'ke ende asnjë detyrë. Shtoje të parën lart.';
+      todolist.appendChild(p);
+      return;
+    }
+    todos.forEach((t, idx)=>{
+      const row = document.createElement('div');
+      row.className = 'todo-item';
+      const check = document.createElement('div');
+      check.className = 'todo-check' + (t.done ? ' done' : '');
+      check.textContent = t.done ? '✓' : '';
+      check.onclick = async ()=>{
+        todos[idx].done = !todos[idx].done;
+        await safeSet('shoku:todos', JSON.stringify(todos));
+        renderTodos();
+      };
+      const txt = document.createElement('div');
+      txt.className = 'todo-text' + (t.done ? ' done' : '');
+      txt.textContent = t.text;
+      const del = document.createElement('button');
+      del.textContent = 'Fshij';
+      del.onclick = async ()=>{
+        todos.splice(idx,1);
+        await safeSet('shoku:todos', JSON.stringify(todos));
+        renderTodos();
+      };
+      row.appendChild(check);
+      row.appendChild(txt);
+      row.appendChild(del);
+      todolist.appendChild(row);
+    });
+  }
+  async function addTodo(){
+    const v = todoInput.value.trim();
+    if(!v) return;
+    todos.push({text:v, done:false});
+    todoInput.value = '';
+    await safeSet('shoku:todos', JSON.stringify(todos));
+    renderTodos();
+  }
+  todoAdd.addEventListener('click', addTodo);
+  todoInput.addEventListener('keydown', (e)=>{ if(e.key === 'Enter'){ e.preventDefault(); addTodo(); } });
+  todoBtn.addEventListener('click', ()=>{ renderTodos(); openSheet(todosheet); });
+
+  /* ---------- LOAD STATE ---------- */
+  async function loadState(){
+    const [savedMsgs, savedMem, savedFlag, savedVoice, savedTodos] = await Promise.all([
+      safeGet('shoku:messages'), safeGet('shoku:memory'),
+      safeGet('shoku:memory_enabled'), safeGet('shoku:voice_out'), safeGet('shoku:todos')
+    ]);
+    if(savedMsgs){ try{ messages = JSON.parse(savedMsgs); }catch(e){} }
+    if(savedMem){ try{ memory = JSON.parse(savedMem); }catch(e){} }
+    if(savedFlag !== null){ memoryEnabled = savedFlag === 'true'; }
+    if(savedVoice !== null){ voiceOutEnabled = savedVoice === 'true'; }
+    if(savedTodos){ try{ todos = JSON.parse(savedTodos); }catch(e){} }
+
+    renderMemSwitch();
+    voiceOutSwitch.classList.toggle('on', voiceOutEnabled);
+
+    if(messages.length === 0){
+      addBubble('shoku', 'Tungjatjeta! Jam SHOKU — shoku yt personal. Më thuaj çka ke në mendje, s\'ke nevojë me kërku fjalë të sakta. Jom këtu.', false);
+      renderChips();
+    } else {
+      messages.forEach(m => addBubble(m.role === 'user' ? 'user' : 'shoku', m.content, false));
+    }
+    scrollBottom();
+  }
+
+  loadState();
+})();
+</script>
+</body>
+</html>
