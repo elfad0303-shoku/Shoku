@@ -1,0 +1,77 @@
+# SHOKU — motori real AI
+
+Ky është backend + frontend real. Rrjedha:
+
+**Ti → SHOKU (frontend) → serveri yt (backend) → modeli i vërtetë i Anthropic → përgjigjja kthehet**
+
+Çelësi i API-së qëndron **vetëm në server**, kurrë në kod që publikohet apo në shfletues.
+
+---
+
+## Çka ka brenda
+
+```
+shoku-app/
+  server.js          → backend-i (Node.js/Express), thërret Anthropic API realisht
+  package.json        → listë e librarive që duhen
+  .env.example         → shembull ku vendoset çelësi (kopjoje si .env)
+  .gitignore            → mban .env dhe të dhënat jashtë Git-it
+  public/index.html      → frontend-i (chat, kujtesë, detyra, zë)
+  data/                    → këtu ruhen kujtesa dhe detyrat e tua (krijohet vetë)
+```
+
+## Hapat për ta ngritur lokalisht
+
+1. **Instalo Node.js** (nëse s'e ke) nga [nodejs.org](https://nodejs.org) — merr versionin LTS.
+
+2. **Hap terminalin** në dosjen `shoku-app` dhe shkruaj:
+   ```
+   npm install
+   ```
+
+3. **Krijo skedarin `.env`**: kopjo `.env.example` dhe riemërtoje `.env`. Hape dhe vendos aty çelësin tënd:
+   ```
+   ANTHROPIC_API_KEY=sk-ant-...
+   ```
+   Çelësin e merr nga [console.anthropic.com](https://console.anthropic.com) → API Keys → Create Key.
+   **Mos e ndaj kurrë këtë çelës me askënd dhe mos e ngarko në GitHub.**
+
+4. **Nise serverin:**
+   ```
+   npm start
+   ```
+   Duhet të shohësh: `SHOKU po punon → http://localhost:3000`
+
+5. **Hape në kompjuter:** shko te `http://localhost:3000` në shfletues — provo ta shkruash diçka, p.sh. "kom nji ide për nji film po skom titull".
+
+## Si ta hapësh në telefon (në të njëjtin WiFi)
+
+1. Gjej IP-në lokale të kompjuterit tënd:
+   - Windows: `ipconfig` (shiko "IPv4 Address")
+   - Mac/Linux: `ifconfig` ose `ip addr` (shiko diçka si `192.168.x.x`)
+2. Sigurohu që telefoni dhe kompjuteri janë në të **njëjtin WiFi**.
+3. Në telefon hap: `http://192.168.x.x:3000` (me IP-në tënde, jo `localhost`).
+4. Shto në ekranin kryesor (Add to Home Screen) që të duket si aplikacion.
+
+## Nëse diçka dështon
+
+Frontend-i tani **nuk fsheh gabimet** — nëse lidhja me modelin dështon, do të shohësh një flluskë të kuqe me gabimin e saktë teknik (p.sh. `[HTTP 401] invalid x-api-key`, ose gabim rrjeti). Kontrollo:
+- A e ke vendosur saktë `ANTHROPIC_API_KEY` në `.env`?
+- A e ke rinisur serverin pas ndryshimit të `.env`?
+- A ka fonde/kredit llogaria jote në console.anthropic.com?
+
+## Si funksionon zgjedhja e mjeteve
+
+SHOKU përdor **tool-use real** të Anthropic API — vetë modeli vendos, brenda çdo kërkese, nëse duhet:
+- të thërrasë `vendos_mjetin` (deklaron transparencë: kërkim interneti / muzikë / video / detyra / bisedë e zakonshme),
+- të thërrasë `menaxho_detyren` (shton/kryen/fshin detyra — kjo është **plotësisht funksionale**),
+- të thërrasë `ruaj_kujtim` (ruan një fakt të qëndrueshëm në kujtesën tënde në server).
+
+Kërkimi në internet, muzika AI, dhe video AI kanë strukturën gati (modeli i njeh, mund t'i "zgjedhë" dhe ta thotë sinqerisht se s'janë ende të lidhura) — hapi tjetër është t'i lidhim me shërbime reale.
+
+## Hapat e ardhshëm (kur të jesh gati)
+
+- **Publikimi online** (jo vetëm WiFi shtëpie): Render.com, Railway.app, ose Fly.io — vendos `ANTHROPIC_API_KEY` si "Environment Variable" atje, jo në kod.
+- **Kërkim real në internet**: shtim i një tool-i që thërret një API kërkimi (p.sh. Brave Search API) dhe ia kthen rezultatet modelit.
+- **Muzikë/Video AI**: lidhje me shërbime si Suno (muzikë) ose modele video, përmes të njëjtit sistem tool-esh.
+- **Bazë e dhënash reale** në vend të skedarëve JSON, nëse do shumë përdorues njëkohësisht.
